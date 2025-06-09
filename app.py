@@ -46,7 +46,17 @@ st.bar_chart(avg_reach)
 
 # Top Posts Table with clickable links
 st.subheader("Top Performing Posts")
+
+# Calculate total engagement
 df["Engagement Total"] = df[["Likes", "Comments", "Shares", "Saves"]].sum(axis=1)
-df["Instagram Link"] = df["Post URL"].apply(lambda x: f"[View Post]({x})" if pd.notnull(x) else "")
+
+# Add clickable Instagram links
+df["Instagram Link"] = df["Post URL"].apply(lambda x: f"[View Post]({x})" if pd.notnull(x) and x != "" else "")
+
+# Show top 10 posts by engagement
 top_posts = df.sort_values(by="Engagement Total", ascending=False).head(10)
-st.write(top_posts[["Date", "Post Type", "Caption", "Reach", "Likes", "Comments", "Shares", "Saves", "Engagement Total", "Instagram Link"]])
+
+# Display relevant columns
+st.write(top_posts[[
+    "Date", "Post Type", "Reach", "Likes", "Comments", "Shares", "Saves", "Engagement Total", "Instagram Link"
+]])
