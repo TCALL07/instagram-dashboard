@@ -34,10 +34,12 @@ col1.metric("Total Reach", int(df["Reach"].sum()))
 col2.metric("Avg Engagements/Post", round((df[["Likes", "Comments", "Shares", "Saves"]].sum(axis=1)).mean(), 2))
 col3.metric("New Followers", int(df["Follows"].sum()))
 
-# Line Chart: Engagement over time
-st.subheader("Engagement Over Time")
-df_sorted = df.sort_values("Date").set_index("Date")
-st.line_chart(df_sorted[["Reach", "Likes", "Comments", "Shares", "Saves"]])
+# Bar Chart: Engagement by Post
+st.subheader("Engagement by Post")
+df["Post Label"] = df["Date"].dt.strftime("%Y-%m-%d") + " | " + df["Post Type"]
+df["Engagement Total"] = df[["Likes", "Comments", "Shares", "Saves"]].sum(axis=1)
+engagement_by_post = df[["Post Label", "Engagement Total"]].sort_values(by="Engagement Total", ascending=True)
+st.bar_chart(data=engagement_by_post.set_index("Post Label"))
 
 # Bar Chart: Average Reach by Post Type
 st.subheader("Average Reach by Post Type")
@@ -46,17 +48,8 @@ st.bar_chart(avg_reach)
 
 # Top Posts Table with clickable links
 st.subheader("Top Performing Posts")
-
-# Calculate total engagement
-df["Engagement Total"] = df[["Likes", "Comments", "Shares", "Saves"]].sum(axis=1)
-
-# Add clickable Instagram links
 df["Instagram Link"] = df["Post URL"].apply(lambda x: f"[View Post]({x})" if pd.notnull(x) and x != "" else "")
-
-# Show top 10 posts by engagement
 top_posts = df.sort_values(by="Engagement Total", ascending=False).head(10)
-
-# Display relevant columns
 st.write(top_posts[[
     "Date", "Post Type", "Reach", "Likes", "Comments", "Shares", "Saves", "Engagement Total", "Instagram Link"
 ]])
