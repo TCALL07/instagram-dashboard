@@ -1,13 +1,17 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
 
 # Load data from published Google Sheet (CSV format)
 sheet_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR93pV70edSHdZnWKBpyvvCoBsZ0JLIpA1qzwM_62vB7qVV8hA6e8_m78q7Oouwk_2fxAK--kNcrwn9/pub?output=csv"
 df = pd.read_csv(sheet_url)
 
 # Convert 'Date' column to datetime
-df["Date"] = pd.to_datetime(df["Date"])
+df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
+
+# Convert numeric columns safely
+numeric_cols = ["Reach", "Likes", "Comments", "Shares", "Saves", "Follows"]
+for col in numeric_cols:
+    df[col] = pd.to_numeric(df[col], errors="coerce")
 
 # Sidebar filters
 st.sidebar.header("Filters")
@@ -32,8 +36,7 @@ col3.metric("New Followers", int(df["Follows"].sum()))
 
 # Line Chart: Engagement over time
 st.subheader("Engagement Over Time")
-df_sorted = df.sort_values("Date")
-df_sorted.set_index("Date", inplace=True)
+df_sorted = df.sort_values("Date").set_index("Date")
 st.line_chart(df_sorted[["Reach", "Likes", "Comments", "Shares", "Saves"]])
 
 # Bar Chart: Average Reach by Post Type
@@ -41,8 +44,9 @@ st.subheader("Average Reach by Post Type")
 avg_reach = df.groupby("Post Type")["Reach"].mean().sort_values()
 st.bar_chart(avg_reach)
 
-# Top Posts Table
+# Top Posts Table with clickable links
 st.subheader("Top Performing Posts")
 df["Engagement Total"] = df[["Likes", "Comments", "Shares", "Saves"]].sum(axis=1)
+df["Instagram Link"] = df["Post URL"].apply(lambda x: f"[View Post]({x})" if pd.notnull(x) else "")
 top_posts = df.sort_values(by="Engagement Total", ascending=False).head(10)
-st.dataframe(top_posts[["Date", "Post Type", "Caption", "Reach", "Likes", "Comments", "Shares", "Saves", "Engagement Total"]])
+st.write(top_posts[["Date", "Post Type", "Caption", "Reach", "Likes", "Comments", "Shares", "Saves", "Engagement Total", "Instagram Link"]])
